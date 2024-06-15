@@ -1,0 +1,15 @@
+# Example server config file
+host: ''
+port: 8022
+clients:
+  # This are just examples. Please generate your own keypair for each client you want to add
+  example1: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFY33xLzFiLk5GnNu2Bm8Ns3TMSILtU6p1WItgy6sPMP
+  example2: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMDV1fTeb7PiYVnqzGTQzdw5r3VPSaDFgfoPm1GD6HaR
+private_key: | # Change this!!!
+  -----BEGIN OPENSSH PRIVATE KEY-----
+  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+  QyNTUxOQAAACDtzTutk/iImRHKDY2CBwoQab6BfE0ppM3/0wNVbvJEzgAAAJCANLL6gDSy
+  +gAAAAtzc2gtZWQyNTUxOQAAACDtzTutk/iImRHKDY2CBwoQab6BfE0ppM3/0wNVbvJEzg
+  AAAECpsT0qdquxr8MUe1zltF1ttE3Ean52CpYROv0WkOcmle3NO62T+IiZEcoNjYIHChBp
+  voF8TSmkzf/TA1Vu8kTOAAAACmp1bGlhbkBwYzEBAgM=
+  -----END OPENSSH PRIVATE KEY-----
