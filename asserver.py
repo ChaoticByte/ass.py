@@ -55,18 +55,24 @@ async def handle_connection(process: asyncssh.SSHServerProcess):
         connected_msg = f"[connected] {username}\n"
         stderr.write(connected_msg)
         broadcast(connected_msg, True)
-        while True:
-            try:
-                async for line in process.stdin:
-                    if line == "": raise asyncssh.BreakReceived(0)
-                    line = line.strip('\r\n')
-                    msg = f"{username}: {line}\n"
-                    stdout.write(msg)
-                    broadcast(msg)
-            except asyncssh.TerminalSizeChanged:
-                continue
-            finally:
-                break
+        if process.command is not None:
+            line = process.command.strip("\r\n")
+            msg = f"{username}: {line}\n"
+            stdout.write(msg)
+            broadcast(msg)
+        else:
+            while True:
+                try:
+                    async for line in process.stdin:
+                        if line == "": raise asyncssh.BreakReceived(0)
+                        line = line.strip('\r\n')
+                        msg = f"{username}: {line}\n"
+                        stdout.write(msg)
+                        broadcast(msg)
+                except asyncssh.TerminalSizeChanged:
+                    continue
+                finally:
+                    break
     except asyncssh.BreakReceived:
         pass
     except Exception as e:
