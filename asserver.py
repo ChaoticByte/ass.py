@@ -84,12 +84,13 @@ if __name__ == "__main__":
     # commandline arguments
     argp = ArgumentParser()
     argp.add_argument("config", type=Path, help="The path to the config file")
+    argp.add_argument("pkey", type=Path, help="The path to the ssh private key")
     args = argp.parse_args()
     # read config
     config = yaml.safe_load(args.config.read_text())
     config_host = str(config["host"])
     config_port = int(config["port"])
-    config_private_key = asyncssh.import_private_key(config["private_key"])
+    config_private_key = asyncssh.import_private_key(args.pkey.read_text())
     server_public_key = config_private_key.export_public_key("openssh").decode().strip("\n\r")
     stderr.write(f"Server public key is \"{server_public_key}\"\n")
     stderr.flush()
