@@ -36,23 +36,30 @@ class SSHServer(asyncssh.SSHServer):
             return False
 
 
-def broadcast(msg: str):
+def broadcast(msg: str, use_stderr: bool = False):
     assert type(msg) == str
-    for c in connected_clients:
-        c.stdout.write(msg)
+    msg = msg.strip("\r\n")
+    if use_stderr:
+        msg += "\r\n"
+        for c in connected_clients:
+            c.stderr.write(msg)
+    else:
+        msg += "\n"
+        for c in connected_clients:
+            c.stdout.write(msg)
 
 async def handle_connection(process: asyncssh.SSHServerProcess):
     connected_clients.append(process)
     username = process.get_extra_info("username")
     try:
         connected_msg = f"[connected] {username}\n"
-        stdout.write(connected_msg)
-        broadcast(connected_msg)
+        stderr.write(connected_msg)
+        broadcast(connected_msg, True)
         while True:
             try:
                 async for line in process.stdin:
                     if line == "": raise asyncssh.BreakReceived(0)
-                    line = line.strip('\n\r')
+                    line = line.strip('\r\n')
                     msg = f"{username}: {line}\n"
                     stdout.write(msg)
                     broadcast(msg)
@@ -69,8 +76,8 @@ async def handle_connection(process: asyncssh.SSHServerProcess):
         process.exit(0)
         connected_clients.remove(process)
         disconnected_msg = f"[disconnected] {username}\n"
-        stdout.write(disconnected_msg)
-        broadcast(disconnected_msg)
+        stderr.write(disconnected_msg)
+        broadcast(disconnected_msg, True)
 
 
 if __name__ == "__main__":
