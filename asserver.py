@@ -17,10 +17,11 @@ import yaml
 
 config_host = ""
 config_port = 8022
-connected_clients = []
 config_clients = {
     # username: asyncssh.SSHAuthorizedKeys
 }
+enable_logging = False
+connected_clients = []
 
 
 class SSHServer(asyncssh.SSHServer):
@@ -56,13 +57,15 @@ async def handle_connection(process: asyncssh.SSHServerProcess):
     try:
         # hello there
         connected_msg = f"[connected] {username}\n"
-        stderr.write(connected_msg)
+        if enable_logging:
+            stderr.write(connected_msg)
         broadcast(connected_msg, True)
         if process.command is not None:
             # client has provided a command as a ssh commandline argument
             line = process.command.strip("\r\n")
             msg = f"{username}: {line}\n"
-            stdout.write(msg)
+            if enable_logging:
+                stdout.write(msg)
             broadcast(msg)
         else:
             # client wants an interactive session
@@ -72,7 +75,8 @@ async def handle_connection(process: asyncssh.SSHServerProcess):
                         if line == "": raise asyncssh.BreakReceived(0)
                         line = line.strip('\r\n')
                         msg = f"{username}: {line}\n"
-                        stdout.write(msg)
+                        if enable_logging:
+                            stdout.write(msg)
                         broadcast(msg)
                 except asyncssh.TerminalSizeChanged:
                     continue # we don't want to exit when the client changes its terminal size lol
@@ -88,7 +92,8 @@ async def handle_connection(process: asyncssh.SSHServerProcess):
         disconnected_msg = f"[disconnected] {username}\n"
         process.exit(0)
         connected_clients.remove(process)
-        stderr.write(disconnected_msg)
+        if enable_logging:
+            stderr.write(disconnected_msg)
         broadcast(disconnected_msg, True)
 
 
@@ -97,11 +102,13 @@ if __name__ == "__main__":
     argp = ArgumentParser()
     argp.add_argument("config", type=Path, help="The path to the config file")
     argp.add_argument("pkey", type=Path, help="The path to the ssh private key")
+    argp.add_argument("--log", action="store_true", help="Enable logging to stdout and stderr")
     args = argp.parse_args()
     # read config
     config = yaml.safe_load(args.config.read_text())
     config_host = str(config["host"])
     config_port = int(config["port"])
+    enable_logging = args.log
     try:
         config_private_key = asyncssh.import_private_key(args.pkey.read_text())
     except asyncssh.public_key.KeyImportError as e:
