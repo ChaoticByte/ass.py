@@ -6,6 +6,7 @@
 import asyncio
 
 from argparse import ArgumentParser
+from getpass import getpass
 from pathlib import Path
 from sys import stdout
 from sys import stderr
@@ -101,7 +102,14 @@ if __name__ == "__main__":
     config = yaml.safe_load(args.config.read_text())
     config_host = str(config["host"])
     config_port = int(config["port"])
-    config_private_key = asyncssh.import_private_key(args.pkey.read_text())
+    try:
+        config_private_key = asyncssh.import_private_key(args.pkey.read_text())
+    except asyncssh.public_key.KeyImportError as e:
+        e_str = str(e).lower()
+        if "passphrase" in e_str or "encyrpted" in e_str: # this is unstable af!
+            config_private_key = asyncssh.import_private_key(args.pkey.read_text(), passphrase=getpass("Private Key Passphrase: "))
+        else:
+            raise e
     for c in config["clients"]:
         config_clients[str(c)] = asyncssh.import_authorized_keys(str(config["clients"][c]))
     # read private key
